@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bellgrave City Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a civic street map of a river capital — header, map with grid references and pins, a scrolling strip of place cards, then the city wiki. */
+:root{
+  --paper:#eef0ea; --land:#e2e5da; --zone:#d4d9cc; --bldg:#bcc3b6; --tower:#97a9b1; --tower-top:#c4d1d6;
+  --water:#9fc2cc; --water-edge:#7aa6b4; --park:#bdd0ad; --hill:#bcc3c9; --hill-snow:#f4f6f5;
+  --ink:#1e2a2f; --muted:#56656a; --line:#c6ccbf; --rail:#2e3c43; --accent:#b8661f; --accent-soft:#f1dcc6;
+  --card:#f7f8f4; --shadow:rgba(30,42,47,.16);
+  --f-display:"Gloock", "Iowan Old Style", Georgia, serif;
+  --f-body:"Figtree", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#11171a; --land:#182025; --zone:#1f292e; --bldg:#2b373c; --tower:#45606b; --tower-top:#6d8a95;
+  --water:#1f4252; --water-edge:#2c6175; --park:#253627; --hill:#283137; --hill-snow:#55636a;
+  --ink:#e4eae6; --muted:#97a6a7; --line:#2c373c; --rail:#c3ced1; --accent:#efa04c; --accent-soft:#3a2a1a;
+  --card:#161e22; --shadow:rgba(0,0,0,.45); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#11171a; --land:#182025; --zone:#1f292e; --bldg:#2b373c; --tower:#45606b; --tower-top:#6d8a95;
+  --water:#1f4252; --water-edge:#2c6175; --park:#253627; --hill:#283137; --hill-snow:#55636a;
+  --ink:#e4eae6; --muted:#97a6a7; --line:#2c373c; --rail:#c3ced1; --accent:#efa04c; --accent-soft:#3a2a1a;
+  --card:#161e22; --shadow:rgba(0,0,0,.45); color-scheme:dark }
+
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.page{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:28px 56px;display:grid;grid-template-columns:minmax(0,1fr);gap:28px}
+.page > *{min-width:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+.head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 32px;align-items:end}
+.kicker{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(44px,7vw,84px);line-height:.95;margin:6px 0 10px;text-wrap:balance}
+.tagline{font-family:var(--f-display);font-size:clamp(18px,2.2vw,24px);margin:0 0 8px}
+.intro{color:var(--muted);max-width:62ch;margin:0}
+.facts{display:grid;grid-template-columns:auto auto;gap:4px 16px;font-size:13px;margin:0;padding:12px 16px;border:1px solid var(--line);border-radius:4px}
+.facts dt{font-family:var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:11px;align-self:center}
+.facts dd{margin:0}
+
+/* map */
+.mapscroll{overflow-x:auto;border:1px solid var(--line);border-radius:4px;background:var(--land);scrollbar-width:thin}
+.mapwrap{position:relative;width:100%;aspect-ratio:1536/848;max-width:none}
+.mapwrap > img{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none}
+.maphint{margin:8px 0 0;font-size:13px;color:var(--muted)}
+.pin{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;border:0;background:none;padding:6px;cursor:pointer;color:var(--ink);font:600 13px/1 var(--f-body)}
+.pin .dot{width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--paper),0 2px 6px var(--shadow);flex:none;transition:transform .15s}
+.pin .lab{display:none;background:var(--paper);padding:4px 7px;border-radius:3px;box-shadow:0 1px 4px var(--shadow);white-space:nowrap}
+.pin:hover .lab,.pin.on .lab,.pin:focus-visible .lab{display:block}
+.pin.edge .dot{border-radius:2px;background:var(--rail);width:12px;height:12px}
+.pin.edge .lab{font-weight:500;font-style:italic}
+.pin:hover .dot,.pin.on .dot,.pin:focus-visible .dot{transform:scale(1.3)}
+.pin.on .lab{background:var(--ink);color:var(--paper)}
+.tip{position:absolute;z-index:5;width:min(270px,70%);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;box-shadow:0 10px 28px var(--shadow);padding:12px 14px;pointer-events:auto}
+.tip::after{content:"";position:absolute;left:var(--arrow,50%);width:12px;height:12px;background:var(--card);border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.tip.below::after{top:-7px;transform:translateX(-50%) rotate(225deg)}
+.tip.above::after{bottom:-7px}
+.tip .t-ref{font-family:var(--f-mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.tip h3{font-family:var(--f-display);font-weight:400;font-size:22px;margin:2px 0 4px}
+.tip p{margin:0 0 8px;font-size:14px;color:var(--muted)}
+.tip a{font-weight:600;font-size:14px;color:var(--accent);text-decoration:none}
+.tip a:hover{text-decoration:underline}
+
+/* strip */
+.sechead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h2{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,3.2vw,34px);margin:0}
+.sechead p{margin:0;color:var(--muted);font-size:14px}
+.stripnav{display:flex;gap:8px}
+.stripnav button{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:18px;cursor:pointer}
+.stripnav button:hover{border-color:var(--accent)}
+.strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,260px);gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 14px;scrollbar-width:thin}
+.place{scroll-snap-align:start;display:grid;grid-template-rows:auto 1fr;background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;text-decoration:none;color:inherit;transition:transform .15s, box-shadow .15s}
+.place:hover{transform:translateY(-3px);box-shadow:0 10px 24px var(--shadow)}
+.place img{display:block;width:100%;aspect-ratio:232/108;height:auto;object-fit:cover;border-bottom:1px solid var(--line)}
+.place .body{padding:12px 14px 14px;display:grid;gap:3px;align-content:start}
+.place .ref{font-family:var(--f-mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.place h3{font-family:var(--f-display);font-weight:400;font-size:21px;margin:0;line-height:1.15}
+.place p{margin:0;font-size:14px;color:var(--muted)}
+
+/* wiki */
+.wiki{display:grid;gap:18px}
+.wgroup{display:grid;gap:12px}
+.wgroup > h3{font-family:var(--f-mono);font-weight:500;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:8px 0 0;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.entries{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.entry{padding:16px 18px;border:1px solid var(--line);border-radius:6px;background:var(--card);min-width:0;scroll-margin-top:24px;transition:box-shadow .3s, border-color .3s}
+.entry.flash{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.entry .ref{font-family:var(--f-mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.entry h4{font-family:var(--f-display);font-weight:400;font-size:23px;margin:2px 0 6px}
+.entry p{margin:0 0 10px;font-size:15px}
+.entry .where{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin:0 0 8px;overflow-wrap:anywhere}
+.entry .back{font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;background:none;border:0;padding:0;cursor:pointer}
+.foot{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
+
+@media (max-width:720px){
+  .head{grid-template-columns:1fr}
+  .mapwrap{width:860px}
+  .tip{width:min(240px,82%)}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;scroll-behavior:auto!important} }
+</style>
+
+</head>
+<body>
+<div class="page">
+  <header class="head">
+    <div>
+      <p class="kicker">Modern Omegaverse City Life · Kingdom of Edevane</p>
+      <h1>Bellgrave</h1>
+      <p class="tagline">Old Stone. New Glass. Filtered Air.</p>
+      <p class="intro">Edevane's capital on the River Wend: finance, Parliament, hospitals, newspapers, and a few million people living politely around each other's biology. Hover a dot on the map to see a district. Pick a card below to open its wiki page.</p>
+    </div>
+    <dl class="facts">
+      <dt>River</dt><dd>the Wend</dd>
+      <dt>Hills</dt><dd>the Greyfells, north</dd>
+      <dt>Districts</dt><dd>7</dd>
+      <dt>Rail</dt><dd>Northvale, 40 min</dd>
+    </dl>
+  </header>
+
+  <section aria-label="City map">
+    <div class="mapscroll">
+      <div class="mapwrap" id="map">
+        <img src="../assets/bellgrave-map.jpg" alt="Painted map of Bellgrave on the River Wend, with the Greyfells on the horizon" width="1536" height="848">
+        <div class="tip" id="tip" hidden></div>
+      </div>
+    </div>
+    <p class="maphint">Hover or tap the orange dots. On a phone, swipe the map sideways.</p>
+  </section>
+
+  <section aria-labelledby="places-h">
+    <div class="sechead">
+      <h2 id="places-h">Places</h2>
+      <div class="stripnav">
+        <button type="button" id="prev" aria-label="Scroll places left">‹</button>
+        <button type="button" id="next" aria-label="Scroll places right">›</button>
+      </div>
+    </div>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <section class="wiki" aria-labelledby="wiki-h">
+    <div class="sechead"><h2 id="wiki-h">City Wiki</h2><p>Addresses read <span style="font-family:var(--f-mono)">District / Neighborhood / Place</span>.</p></div>
+    <div class="wgroup"><h3>Districts</h3><div class="entries" id="w-districts"></div></div>
+    <div class="wgroup"><h3>Places</h3><div class="entries" id="w-places"></div></div>
+    <div class="wgroup"><h3>Beyond the city</h3><div class="entries" id="w-beyond"></div></div>
+  </section>
+
+  <p class="foot"><a href="../">← Modern Omegaverse City Life</a> · Map v0.2 · painted map, panorama version. Names marked draft may still change.</p>
+</div>
+
+<script>
+/* ---------- content ---------- */
+const DISTRICTS = [
+  {id:"crossgate", name:"Crossgate", x:47, y:12.5, ref:"C2", line:"Towers, trading floors, and the city's best filters.",
+   body:"Bellgrave's business district: a cluster of glass towers around the old crossroads gate. Corvane Financial is here, and so is Crossgate Station, where the trains leave for Northvale. The higher the floor, the better the air.", where:"Crossgate"},
+  {id:"kingsbank", name:"Kingsbank", x:27.5, y:36, ref:"B3", line:"Parliament, courts, and the division bells.",
+   body:"Old stone on the north bank of the Wend. The House of Edevane sits under its green copper dome, the courts sit behind plane trees, and reporters wait on the steps.", where:"Kingsbank"},
+  {id:"fenwick", name:"Fenwick", x:92, y:37, ref:"E2", line:"Bellgrave General and the clinics that never close.",
+   body:"The medical district: Bellgrave General's white campus, private clinics, suppressant pharmacies, and the night buses that carry the shift change.", where:"Fenwick"},
+  {id:"wexley", name:"Wexley", x:64, y:78, ref:"C3", line:"Homes, small shops, and rents on the rise.",
+   body:"A mixed neighborhood just south of Crossgate, where homes and offices share the same streets. The tram stops here. Council is voting on the Wexley Street rezoning, and landlords have noticed.", where:"Wexley"},
+  {id:"fleetside", name:"Fleetside", x:60, y:51.5, ref:"E4", line:"The Courier, theatre row, and late lights.",
+   body:"Across the Wend: old brick printing houses, the Bellgrave Courier's newsroom, a theatre street with marquee lights, and bars that stay open for the late edition.", where:"Fleetside"},
+  {id:"ashcombe", name:"Ashcombe", x:8.5, y:30, ref:"B2", line:"Gardens, gates, and invitations.",
+   body:"Leafy old-money streets with walled gardens and doormen. Private clubs, quiet embassies, and Concord's Bellgrave residence.", where:"Ashcombe"},
+  {id:"harrowvale", name:"Harrow Vale", x:23, y:78, ref:"B4", line:"Docks, dawn markets, and the trains from the provinces.",
+   body:"River docks, warehouses, and a market that opens before light. Harrow Vale Terminus is where the regional trains come in, and many newcomers from the provinces spend their first nights here.", where:"Harrow Vale"}
+];
+const EDGES = [
+  {id:"northvale", name:"To Northvale", x:98, y:5, ref:"F1", line:"University town, 40 minutes by rail.",
+   body:"Bellgrave's satellite university town, northeast toward the Greyfells. Northvale graduates commute in, move in, or stay away on purpose.", where:"Northvale (outside the city)"},
+  {id:"provinces", name:"To the Provinces", x:2.2, y:44.4, ref:"A4", line:"Estates and vineyards, old families on old land.",
+   body:"The countryside west of the capital: estates, vineyards, and pack families who still run their land the old way. Their trains end at Harrow Vale.", where:"The Provinces (outside the city)"},
+  {id:"airport", name:"To Bellgrave Airport", x:98.2, y:60.5, ref:"F3", line:"International flights, east of the city.",
+   body:"Bellgrave's international airport, east along the Wend. Diplomats, executives, and visiting families come in this way.", where:"Bellgrave Airport (outside the city)"}
+];
+const PLACES = [
+  {id:"cafe", name:"The Café", district:"wexley", nb:"Bramble Lane", line:"Coffee, regulars, and a doorbell that sticks.", view:[600,400,240,180],
+   body:"Your café, a year old: about ten tables on a street shared by homes and offices. The bell over the door sticks before it rings. Draft name and street."},
+  {id:"corvane", name:"Corvane Financial", district:"crossgate", nb:"Crossgate", line:"Nine floors of nothing in the air.", view:[520,200,240,180],
+   body:"A financial firm in one of Crossgate's towers. The ninth floor smells of nothing at all, and the executive floors above it have better filters."},
+  {id:"general", name:"Bellgrave General", district:"fenwick", nb:"Fenwick", line:"The doors that never close.", view:[860,160,240,180],
+   body:"The city's great public hospital. Its emergency department never closes, and the heat bay light over triage is a fact of life."},
+  {id:"courier", name:"The Bellgrave Courier", district:"fleetside", nb:"Fleetside", line:"Three sources or it's a rumor.", view:[740,600,240,180],
+   body:"A newspaper that still has a newsroom: old carpet, a scent-neutral air system that hums all day, and a city desk whiteboard where stories live or die."},
+  {id:"house", name:"House of Edevane", district:"kingsbank", nb:"Kingsbank", line:"Bells, bills, and old stone.", view:[300,400,240,180],
+   body:"Parliament, built for men in heavy coats and never fully adjusted since. The division bells are tested every Monday at half past seven."},
+  {id:"concord", name:"Concord", district:"ashcombe", nb:"Ashcombe", line:"Behind the garden wall.", view:[140,160,240,180],
+   body:"Concord's Bellgrave residence, discreet and well kept. From the street you see a wall, a gate, and the tops of old trees."}
+];
+
+/* ---------- pins and tooltip ---------- */
+const map=document.getElementById("map"), tip=document.getElementById("tip");
+const all=[...DISTRICTS,...EDGES];
+let current=null, hideTimer=null;
+all.forEach(d=>{
+  const b=document.createElement("button");
+  b.type="button"; b.className="pin"+(EDGES.includes(d)?" edge":""); b.dataset.id=d.id;
+  b.style.left=d.x+"%"; b.style.top=d.y+"%";
+  b.setAttribute("aria-label",d.name+". "+d.line);
+  b.innerHTML=`<span class="dot"></span><span class="lab">${d.name}</span>`;
+  b.addEventListener("mouseenter",()=>show(d,b));
+  b.addEventListener("mouseleave",()=>queueHide());
+  b.addEventListener("focus",()=>show(d,b));
+  b.addEventListener("click",e=>{e.stopPropagation(); current===d.id && !tip.hidden ? hide() : show(d,b)});
+  map.appendChild(b);
+});
+tip.addEventListener("mouseenter",()=>clearTimeout(hideTimer));
+tip.addEventListener("mouseleave",()=>queueHide());
+document.addEventListener("click",e=>{ if(!map.contains(e.target)) hide() });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") hide() });
+function show(d,b){
+  clearTimeout(hideTimer); current=d.id;
+  map.querySelectorAll(".pin").forEach(p=>p.classList.toggle("on",p===b));
+  tip.innerHTML=`<div class="t-ref">${EDGES.includes(d)?"BEYOND THE CITY":"DISTRICT"}</div><h3>${d.name}</h3><p>${d.line}</p><a href="#w-${d.id}" data-go="${d.id}">Open wiki page →</a>`;
+  tip.hidden=false;
+  const mw=map.clientWidth, mh=map.clientHeight, tw=tip.offsetWidth, th=tip.offsetHeight;
+  const px=d.x/100*mw, py=d.y/100*mh;
+  let left=Math.min(Math.max(px-tw/2,8),mw-tw-8);
+  const above=py-th-22>=4;
+  tip.classList.toggle("above",above); tip.classList.toggle("below",!above);
+  tip.style.left=left+"px";
+  tip.style.top=(above?py-th-20:py+20)+"px";
+  tip.style.setProperty("--arrow",(px-left)+"px");
+}
+function queueHide(){clearTimeout(hideTimer);hideTimer=setTimeout(hide,220)}
+function hide(){tip.hidden=true;current=null;map.querySelectorAll(".pin").forEach(p=>p.classList.remove("on"))}
+
+/* ---------- place strip ---------- */
+const strip=document.getElementById("strip");
+const byId=Object.fromEntries(DISTRICTS.map(d=>[d.id,d]));
+const CARD_IMG=["../assets/card-cafe.jpg", "../assets/card-corvane.jpg", "../assets/card-general.jpg", "../assets/card-courier.jpg", "../assets/card-house.jpg", "../assets/card-concord.jpg"];
+PLACES.forEach((p,i)=>{
+  const a=document.createElement("a");
+  a.className="place"; a.href="#w-"+p.id; a.dataset.go=p.id;
+  a.innerHTML=`<img src="${CARD_IMG[i]}" alt="" loading="lazy">
+  <div class="body"><span class="ref">${byId[p.district].name.toUpperCase()}</span><h3>${p.name}</h3><p>${p.line}</p></div>`;
+  strip.appendChild(a);
+});
+const step=()=>Math.max(240,strip.clientWidth*0.8);
+document.getElementById("prev").onclick=()=>strip.scrollBy({left:-step(),behavior:"smooth"});
+document.getElementById("next").onclick=()=>strip.scrollBy({left:step(),behavior:"smooth"});
+
+/* ---------- wiki ---------- */
+function entry(d,where,ref,extra){
+  return `<article class="entry" id="w-${d.id}"><span class="ref">${(extra||ref).toUpperCase()}</span><h4>${d.name.replace(/^To /,"")}</h4><p>${d.body}</p><p class="where">${where}</p><button type="button" class="back" data-pin="${d.id}">Show on map ↑</button></article>`;
+}
+document.getElementById("w-districts").innerHTML=DISTRICTS.map(d=>entry(d,d.where,"District")).join("");
+document.getElementById("w-places").innerHTML=PLACES.map(p=>{const dd=byId[p.district];return entry(p,`${dd.name} / ${p.nb} / ${p.name}`,dd.ref,dd.name)}).join("");
+document.getElementById("w-beyond").innerHTML=EDGES.map(d=>entry(d,d.where,"Beyond the city")).join("");
+
+document.addEventListener("click",e=>{
+  const go=e.target.closest("[data-go]");
+  if(go){e.preventDefault(); const t=document.getElementById("w-"+go.dataset.go); if(t){t.scrollIntoView({behavior:"smooth",block:"center"}); t.classList.add("flash"); setTimeout(()=>t.classList.remove("flash"),1600)} hide(); return;}
+  const back=e.target.closest("[data-pin]");
+  if(back){const id=back.dataset.pin; const place=PLACES.find(p=>p.id===id); const target=place?place.district:id;
+    const b=map.querySelector(`.pin[data-id="${target}"]`); map.scrollIntoView({behavior:"smooth",block:"center"});
+    setTimeout(()=>show(all.find(d=>d.id===target),b),400);}
+});
+</script>
+
+</body>
+</html>

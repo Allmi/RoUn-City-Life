@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Modern Omegaverse City Life — maps, world reference, and play resources.">
+    <title>Modern Omegaverse City Life · RoUn</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f6f0ff;
+        --muted: #bcb2cc;
+        --paper: #15111d;
+        --panel: #21182e;
+        --line: #47385b;
+        --accent: #dd8aff;
+        --gold: #f4c86d;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        font-family: Georgia, "Times New Roman", serif;
+        line-height: 1.55;
+        background:
+          radial-gradient(circle at 10% 0%, #48225f 0, transparent 34rem),
+          radial-gradient(circle at 92% 14%, #342352 0, transparent 29rem),
+          var(--paper);
+      }
+
+      a { color: inherit; }
+      .shell { width: min(1080px, calc(100% - 40px)); margin: 0 auto; }
+      header { padding: 28px 0 0; }
+      nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+      .eyebrow {
+        margin: 0;
+        color: var(--gold);
+        font: 700 .73rem/1.2 system-ui, sans-serif;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+      }
+      .brand { margin: 5px 0 0; font-size: 1.18rem; }
+      .back {
+        color: var(--muted);
+        font: 600 .9rem/1.2 system-ui, sans-serif;
+        text-decoration: none;
+      }
+      .back:hover, .back:focus-visible { color: var(--ink); }
+      .hero { padding: 92px 0 62px; max-width: 780px; }
+      h1 { margin: 10px 0 20px; font-size: clamp(3rem, 9vw, 6.8rem); line-height: .92; letter-spacing: -.065em; }
+      .hero p { max-width: 650px; margin: 0; color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.3rem); }
+      .rule { height: 1px; background: linear-gradient(90deg, var(--accent), transparent); opacity: .75; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; padding: 37px 0 64px; }
+      .card {
+        display: flex;
+        flex-direction: column;
+        min-height: 270px;
+        padding: 30px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(145deg, #291c38, var(--panel));
+        text-decoration: none;
+        transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      }
+      .card:hover, .card:focus-visible { transform: translateY(-4px); border-color: var(--accent); background: #2b1d3c; }
+      .card h2 { margin: 12px 0 8px; font-size: clamp(1.55rem, 3vw, 2.15rem); line-height: 1.05; }
+      .card p { margin: 0; color: var(--muted); }
+      .cta { margin-top: auto; padding-top: 26px; color: var(--gold); font: 700 .9rem/1.2 system-ui, sans-serif; }
+      .note { padding: 0 0 70px; }
+      .note h2 { margin: 0 0 10px; font-size: 1.18rem; }
+      .note p { max-width: 690px; margin: 0; color: var(--muted); }
+      footer { padding: 24px 0 34px; border-top: 1px solid var(--line); color: var(--muted); font: .82rem/1.45 system-ui, sans-serif; }
+      @media (max-width: 650px) {
+        .shell { width: min(100% - 28px, 1080px); }
+        .hero { padding: 68px 0 47px; }
+        .grid { grid-template-columns: 1fr; padding-top: 27px; }
+        .card { min-height: 220px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="shell">
+      <nav aria-label="Site navigation">
+        <div>
+          <p class="eyebrow">A RoUn Bot</p>
+          <p class="brand">Modern Omegaverse City Life</p>
+        </div>
+        <a class="back" href="https://github.com/Allmi/RoUn" aria-label="Visit the RoUn hub">RoUn hub ↗</a>
+      </nav>
+    </header>
+
+    <main class="shell">
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Guide · Map · Reference</p>
+        <h1 id="page-title">Modern Omegaverse<br>City Life</h1>
+        <p>Haven &amp; Hunt. A working life in Bellgrave, where biology is polite in public and loud in private.</p>
+      </section>
+
+      <div class="rule" aria-hidden="true"></div>
+
+      <section class="grid" aria-label="Explore Modern Omegaverse City Life">
+        <a class="card" href="map/">
+          <p class="eyebrow">Interactive guide</p>
+          <h2>Bellgrave City Map</h2>
+          <p>Hover the districts of Edevane's capital on the River Wend, from Crossgate's towers to Harrow Vale's docks.</p>
+          <span class="cta">Open the map →</span>
+        </a>
+        <a class="card" href="map/#wiki-h">
+          <p class="eyebrow">Living reference</p>
+          <h2>City Wiki</h2>
+          <p>Districts, workplaces, and the places just beyond the city: Northvale, the provinces, the airport.</p>
+          <span class="cta">Open the wiki →</span>
+        </a>
+      </section>
+
+      <section class="note" aria-labelledby="about-title">
+        <h2 id="about-title">About this space</h2>
+        <p>This is the public home for the Modern Omegaverse City Life bot on Saucepan. Names marked draft may still change.</p>
+      </section>
+    </main>
+
+    <footer class="shell">Modern Omegaverse City Life · Part of the RoUn collection</footer>
+  </body>
+</html>
